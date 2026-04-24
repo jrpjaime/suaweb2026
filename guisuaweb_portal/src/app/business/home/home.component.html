@@ -1,0 +1,78 @@
+<div class="row mb-4">
+  <div class="col-12">
+    
+    <!-- Título de sección sutil -->
+    <h5 class="text-muted fw-light mb-3 ms-1">Panel de Control</h5>
+
+    <!-- Tarjeta Ejecutiva -->
+ 
+        <div class="d-flex align-items-center flex-column flex-md-row">
+          
+          <!-- Icono / Avatar (Opcional pero recomendado) -->
+          <div class="avatar-circle mb-3 mb-md-0 me-md-4">
+            <span class="initials">{{ nombreCompleto.charAt(0) }}</span>
+          </div>
+
+          <!-- Información -->
+          <div class="w-100 text-center text-md-start">
+            <div class="d-flex justify-content-center justify-content-md-between align-items-center mb-1">
+              <h6 class="welcome-text mb-0">Bienvenido </h6>
+             
+              
+            </div>
+            
+            <h2 class="user-name mb-3">{{ nombreCompleto }}</h2>
+
+            <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-3">
+              <!-- Datos en formato "Pill" o etiqueta -->
+              <div class="data-item">
+                <span class="label">RFC:</span>
+                <span class="value">{{ rfcUsuario }}</span>
+              </div>
+              <div class="data-separator d-none d-md-block"></div>
+              <div class="data-item">
+                <span class="label">CURP:</span>
+                <span class="value">{{ curpUsuario }}</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+ 
+ 
+
+<div class="row mt-4">
+  <div class="col-12">
+
+    <!-- MENSAJE PARA ESTATUS 3: PENDIENTE DE AUTORIZAR -->
+    @if (indPendienteBajaSesion) {
+      <div class="alert alert-warning" role="alert"> 
+          
+          <div>
+            <span class="d-block fw-bold text-dark">
+              Persona Física: {{ rfcSesion }}, {{ nombreCompletoSync }} encontrado/a.
+            </span>
+            <span class="text-muted">
+              Contador, usted tiene una Solicitud de baja pendiente por autorizar.
+            </span>
+          </div> 
+      </div>
+    }
+
+    <!-- MENSAJE PARA ESTATUS 10: BAJA DEFINITIVA -->
+    @if (indBajaSesion) {
+      <div class="alert alert-warning" role="alert"> 
+          <div>
+            <strong class="d-block">Aviso importante</strong>
+            Su registro de Contador Público Autorizado se encuentra inactivo.
+          </div> 
+      </div>
+    }
+
+  </div>
+</div>        
+
+
+
+  </div>
+</div>

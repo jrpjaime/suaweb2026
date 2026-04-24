@@ -1,0 +1,215 @@
+<div class="row">
+    <div class="col-12">
+        <h3 class="mb-0">Presentación de la acreditación y membresía</h3>
+        <hr class="red">
+    </div>
+</div>
+
+<form [formGroup]="formAcreditacionMembresia"  >
+  <div class="row">
+      <div class="col-sm-6">
+          <div class="form-group">
+            <p>El folio de la solicitud es: <strong>{{ folioSolicitud }}</strong></p>
+          </div>
+      </div>
+  </div>
+  <div class="row">
+        <div class="col-sm-6">
+          <div class="form-group">
+            <p>Paso 1 de 2: Adjuntar documentación comprobatoria</p>
+            </div>
+          </div>
+  </div>
+  <div class="row">
+          <div class="col-sm-4">
+            <label for="fechaExpedicionAcreditacion" class="form-label">* Fecha de expedición de Acreditación: </label>
+            <div class="form-group datepicker-group">
+              <input class="form-control"  id="fechaExpedicionAcreditacion" placeholder="DD/MM/AAAA" formControlName="fechaExpedicionAcreditacion" type="date" [max]="maxDate" onkeydown="return false" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+              @if (formAcreditacionMembresia.get('fechaExpedicionAcreditacion')?.invalid && formAcreditacionMembresia.get('fechaExpedicionAcreditacion')?.touched) {
+                <small class="text-danger">Proporcione la información requerida.</small>
+              }
+               <!-- Validación del error personalizado -->
+              <div [hidden]="!formAcreditacionMembresia.hasError('fechaInvalid') || !formAcreditacionMembresia.touched">
+                <small class="text-danger">{{ formAcreditacionMembresia.errors?.['fechaInvalid'] }}</small>
+              </div>
+
+            </div>
+          </div>
+  </div>
+  <div class="row">
+          <div class="col-sm-4">
+            <label for="fechaExpedicionMembresia" class="form-label">* Fecha expedición de la Membresía: </label>
+            <div class="form-group datepicker-group">
+              <input class="form-control"  id="fechaExpedicionMembresia" placeholder="DD/MM/AAAA" formControlName="fechaExpedicionMembresia" type="date" [max]="maxDate" onkeydown="return false" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+              @if (formAcreditacionMembresia.get('fechaExpedicionMembresia')?.invalid && formAcreditacionMembresia.get('fechaExpedicionMembresia')?.touched) {
+                <small class="text-danger">Proporcione la información requerida.</small>
+              }
+            </div>
+          </div>
+  </div>
+
+  <div class="row">
+        <div class="col-sm-7">
+          <div class="form-group">
+            <p>Los documentos se deberan adjuntar en formato pdf y que no sean mayores a 5MB.</p>
+            </div>
+          </div>
+  </div>
+
+
+  <!-- SECCIÓN PARA ARCHIVO DE ACREDITACIÓN -->
+  <div class="row mb-3">
+    <div class="col-sm-6">
+      <div class="form-group">
+        <label for="archivoUno" class="form-label">* Archivo de Acreditación:</label>
+        <div class="input-group">
+          <div class="row 12">
+            <div class="col-sm-8">
+              <input type="file" class="form-control" id="archivoUno" (change)="onFileSelected($event, 'archivoUno')" accept="application/pdf" [disabled]="fileUnoUploadSuccess || loadingFileUno">
+            </div>
+            <div class="col-sm-4">
+              <button type="button" class="btn btn-primary" (click)="uploadFile('archivoUno')"
+                      [disabled]="!selectedFileUno || fileUnoUploadSuccess || loadingFileUno || formAcreditacionMembresia.hasError('archivosDuplicados')">
+                @if (loadingFileUno) {
+                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                  Adjuntando...
+                } @else {
+                  Adjuntar
+                }
+              </button>
+            </div>
+          </div>
+
+
+        </div>
+
+        @if (formAcreditacionMembresia.get('archivoUno')?.invalid && formAcreditacionMembresia.get('archivoUno')?.touched && !fileUnoUploadSuccess && !formAcreditacionMembresia.hasError('archivosDuplicados')) {
+          <small class="text-danger">Por favor, selecciona un archivo de acreditación (PDF, máximo 5MB).</small>
+        }
+         @if (selectedFileUno && !fileUnoUploadSuccess && !loadingFileUno && !formAcreditacionMembresia.hasError('archivosDuplicados')) {
+            <small class="text-muted d-block mt-1">Archivo seleccionado: {{ selectedFileUno.name }}</small>
+        }
+
+
+        <!-- Mensaje de éxito para archivoUno -->
+        @if (fileUnoUploadSuccess) {
+          <div class="alert alert-success mt-2 d-flex align-items-center">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            Archivo de acreditación cargado exitosamente.
+            <div class="action-icons ms-3">
+              <a href="javascript:void(0)" (click)="downloadFile(fileUnoHdfsPath, selectedFileUno?.name || 'archivo_acreditacion')" class="icon-link" title="Descargar">
+                <i class="bi bi-download"></i>
+                <span class="icon-text"> </span>
+              </a>
+              <a href="javascript:void(0)" (click)="deleteFile('archivoUno')" class="icon-link text-danger" title="Eliminar">
+                <i class="bi bi-trash"></i>
+                <span class="icon-text"> </span>
+              </a>
+            </div>
+          </div>
+        }
+        <!-- Mensaje de error específico para archivoUno -->
+        @if (fileUnoError) {
+          <div class="alert alert-danger mt-2 d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {{ fileUnoError }}
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN PARA ARCHIVO DE MEMBRESÍA -->
+  <div class="row mb-3">
+    <div class="col-sm-6">
+      <div class="form-group">
+        <label for="archivoDos" class="form-label">* Archivo de Membresía:</label>
+        <div class="input-group">
+          <div class="row 12">
+            <div class="col-sm-8">
+              <input type="file" class="form-control" id="archivoDos" (change)="onFileSelected($event, 'archivoDos')" accept="application/pdf" [disabled]="fileDosUploadSuccess || loadingFileDos">
+            </div>
+            <div class="col-sm-4">
+              <button type="button" class="btn btn-primary" (click)="uploadFile('archivoDos')"
+                      [disabled]="!selectedFileDos || fileDosUploadSuccess || loadingFileDos || formAcreditacionMembresia.hasError('archivosDuplicados')">
+                @if (loadingFileDos) {
+                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                  Adjuntando...
+                } @else {
+                  Adjuntar
+                }
+              </button>
+            </div>
+          </div>
+
+
+
+        </div>
+
+        @if (formAcreditacionMembresia.get('archivoDos')?.invalid && formAcreditacionMembresia.get('archivoDos')?.touched && !fileDosUploadSuccess && !formAcreditacionMembresia.hasError('archivosDuplicados')) {
+          <small class="text-danger">Por favor, selecciona un archivo de membresía (PDF, máximo 5MB).</small>
+        }
+        @if (selectedFileDos && !fileDosUploadSuccess && !loadingFileDos && !formAcreditacionMembresia.hasError('archivosDuplicados')) {
+            <small class="text-muted d-block mt-1">Archivo seleccionado: {{ selectedFileDos.name }}</small>
+        }
+
+        <!-- Mensaje de éxito para archivoDos -->
+        @if (fileDosUploadSuccess) {
+          <div class="alert alert-success mt-2 d-flex align-items-center">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            Archivo de membresía cargado exitosamente.
+            <div class="action-icons ms-3">
+              <a href="javascript:void(0)" (click)="downloadFile(fileDosHdfsPath, selectedFileDos?.name || 'archivo_membresia')" class="icon-link" title="Descargar">
+                <i class="bi bi-download"></i>
+                <span class="icon-text"> </span>
+              </a>
+              <a href="javascript:void(0)" (click)="deleteFile('archivoDos')" class="icon-link text-danger" title="Eliminar">
+                <i class="bi bi-trash"></i>
+                <span class="icon-text"> </span>
+              </a>
+            </div>
+          </div>
+        }
+        <!-- Mensaje de error específico para archivoDos -->
+        @if (fileDosError) {
+          <div class="alert alert-danger mt-2 d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {{ fileDosError }}
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- MENSAJE DE ERROR PARA ARCHIVOS DUPLICADOS (A NIVEL DE FORMULARIO) -->
+  @if (formAcreditacionMembresia.hasError('archivosDuplicados')) {
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="alert alert-danger mt-2 d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {{ formAcreditacionMembresia.errors?.['archivosDuplicados']?.message }}
+            </div>
+        </div>
+    </div>
+  }
+
+  <div class="row">
+    <div class="col-sm-6">
+      <div class="form-group">
+        <p>* Campo obligatorio</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botones alineados a la derecha -->
+  <div class="pull-right">
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-dismiss="modal" (click)="onReiniciarFormAcreditacionMembresia()">Cancelar</button>
+        <button type="button" class="btn btn-primary"
+        [disabled]="!formAcreditacionMembresia.valid || !fileUnoUploadSuccess || !fileDosUploadSuccess || formAcreditacionMembresia.hasError('archivosDuplicados')"
+        (click)="continuarConAcuse()"  >
+        Verificar
+      </button>
+    </div>
+  </div>
+</form>

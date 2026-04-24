@@ -1,0 +1,71 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <h3>Solicitud de Movimientos Patronales</h3>
+      <hr class="red">
+    </div>
+  </div>
+
+  <form [formGroup]="formSolicitud">
+    <div class="row">
+
+      <!-- 1. Registro Patronal (Orden corregido) -->
+      <div class="col-md-12">
+        <div class="form-group">
+          <label class="control-label" for="registroPatronal">Registro Patronal:*</label>
+          <select class="form-control" id="registroPatronal" formControlName="registroPatronal">
+            <option [value]="null">Seleccione un registro patronal</option>
+            @for (rp of registrosPatronales(); track rp.registroPatronal) {
+              <!-- CAMBIO CLAVE: Se usa rp.razonSocial para mostrar el nombre -->
+              <option [value]="rp.registroPatronal">
+                {{ rp.registroPatronal }} - {{ rp.razonSocial }}
+              </option>
+            }
+          </select>
+          @if (formSolicitud.get('registroPatronal')?.invalid && formSolicitud.get('registroPatronal')?.touched) {
+            <small class="form-text text-danger">Debe seleccionar un registro.</small>
+          }
+        </div>
+      </div>
+
+      <!-- 2. Tipo de cuota -->
+      <div class="col-md-6">
+        <div class="form-group">
+          <label class="control-label" for="tipoCuota">Tipo de cuota:*</label>
+          <select class="form-control" id="tipoCuota" formControlName="cveIdTipoCuota">
+            <option [value]="null">Seleccione el tipo de cuota</option>
+            @for (cuota of tiposCuota(); track cuota.cveIdTipoCuota) {
+              <option [value]="cuota.cveIdTipoCuota">{{ cuota.desTipoCuota }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- 3. Periodo -->
+      <div class="col-md-6">
+        <div class="form-group">
+          <label class="control-label" for="periodo">Periodo (YYYYMM):*</label>
+          <input
+            type="text"
+            class="form-control"
+            id="periodo"
+            formControlName="periodo"
+            placeholder="Ejemplo: 202409"
+            maxlength="6">
+          @if (formSolicitud.get('periodo')?.invalid && formSolicitud.get('periodo')?.touched) {
+            <small class="form-text text-danger">Formato inválido (YYYYMM).</small>
+          }
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row mt-4">
+      <div class="col-md-12 text-right">
+        <button type="button" class="btn btn-primary" [disabled]="formSolicitud.invalid" (click)="enviarConsulta()">
+          Continuar
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

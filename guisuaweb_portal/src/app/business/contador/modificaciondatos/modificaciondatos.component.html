@@ -1,0 +1,797 @@
+<div class="row">
+    <div class="col-12">
+        <h3 class="mb-0">Modificación de datos</h3>
+        <hr class="red">
+    </div>
+</div>
+
+<div class="row">
+  <div class="col-sm-6">
+      <div class="form-group">
+          <p>El folio de la solicitud es:
+            @if (folioSolicitud && !loadingFolio) {
+                <strong>{{ folioSolicitud }}</strong>
+            } @else if (loadingFolio) {
+                <strong>
+                  <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                  Cargando folio...
+                </strong>
+            } @else {
+                <strong>No disponible</strong>
+            }
+          </p>
+      </div>
+  </div>
+</div>
+<div class="row">
+    <div class="col-sm-6">
+        <div class="form-group">
+            <p>Paso 1 de 2: Modificación de datos</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-sm-8">
+       <p>Selecciona la información que quieres actualizar. Debes firmar con FIEL para concluir el trámite.</p>
+        <label for="tipoDato" class="form-label">Datos:</label>
+        <select class="form-control" id="tipoDato" [(ngModel)]="selectedTipoDato" (change)="onTipoDatoChange($event)"  style="max-width: 300px;">
+            <option value="">Elija opción</option>
+            @for (tipo of tiposDatosContador; track tipo.cveIdTipoDato) {
+                <option [value]="tipo.cveIdTipoDato">{{ tipo.desTipoDatos }}</option>
+            }
+        </select>
+    </div>
+</div>
+
+<!-- SECCIÓN PARA MOSTRAR DATOS DEL COLEGIO (condicional) -->
+@if (mostrarSeccionColegio) {
+    <div class="row mt-4">
+        <div class="col-12">
+            <h4>Datos del Colegio o asociado profesional de contadores públicos</h4>
+            <hr class="red">
+
+
+            @if (loadingColegio) {
+                <div class="text-center my-3">
+                    <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                    Cargando datos del colegio...
+                </div>
+            } @else if (colegioContador) {
+                <div>
+                    <!-- PREGUNTA Y BOTONES -->
+                    <div class="mb-3">
+                        <p>¿Desea actualizar los datos del colegio o asociación al que pertenece?</p>
+                        <button class="btn btn-primary me-2" (click)="respuestaActualizarColegio(true)">Sí</button>
+                        <button class="btn btn-secondary" (click)="respuestaActualizarColegio(false)">No</button>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">RFC del Colegio:</label>
+                        @if (!habilitarEdicionRfcColegio) {
+                            <!-- Modo Lectura -->
+                            <p><strong>{{ colegioContador.rfcColegio }}</strong></p>
+                        } @else {
+                            <!-- Modo Edición -->
+                            <input type="text" class="form-control" style="max-width: 300px;"
+                                    [class.is-invalid]="(nuevoRfcColegio && !validarRfcPersonaMoral(nuevoRfcColegio))"
+                                    [(ngModel)]="nuevoRfcColegio"
+                                    (ngModelChange)="busquedaColegioRealizada = false; rfcColegioValido = true;"
+                                    [disabled]="busquedaColegioRealizada"
+                                    placeholder="Ingrese nuevo RFC" 
+                                    maxlength="12">
+                            
+                            <!-- Mensaje de Error (Estilo Alerta Roja) -->
+                            @if (nuevoRfcColegio && !validarRfcPersonaMoral(nuevoRfcColegio)) {
+                                <div class="alert alert-danger mt-1 p-2 d-flex align-items-center" style="max-width: 300px;" role="alert">
+                                    <i   style="font-size: 1.2rem;"></i>
+                                    <div>El RFC no cuenta con un formato válido, favor de verificar.</div>
+                                </div>
+                            }
+                        }
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Razón Social:</label>
+                        <p><strong>{{ colegioContador.razonSocial }}</strong></p>
+                    </div>
+
+                    @if (habilitarEdicionRfcColegio) {
+                         <div  >
+                            <button type="button" class="btn btn-primary me-2"  (click)="buscarNuevoColegio()" [disabled]="busquedaColegioRealizada">Buscar</button>
+                            <button type="button" class="btn btn-secondary" (click)="limpiarNuevoRfcColegio()">Limpiar</button>
+                        </div>
+
+
+                    }
+
+
+                    <h4>Documentación comprobatoria</h4>
+                    <hr class="red">
+                    <p>Los documentos se deberán adjuntar en formato pdf y que no sean mayores a 5MB.</p>
+                    <!-- SECCIÓN PARA ARCHIVO DE CONSTANCIA DE MEMBRESÍA -->
+                    <div class="form-group row mb-3">
+                        <label for="constanciaMembresia" class="col-md-3 col-form-label">* Constancia de membresía:</label>
+                        <div class="col-md-9">
+                            <div class="input-group">
+                                <div class="row w-100 m-0">
+                                    <div class="col-sm-6 p-0">
+                                        <input type="file" class="form-control" id="constanciaMembresia"
+                                            (change)="onFileSelected($event, 'constanciaMembresia')"
+                                            accept="application/pdf"
+                                            [disabled]="!habilitarEdicionRfcColegio || fileConstanciaUploadSuccess || loadingFileConstancia">
+                                    </div>
+                                    <div class="col-sm-3 pr-0">
+                                        <button type="button" class="btn btn-primary w-100"
+                                                (click)="uploadFile('constanciaMembresia')"
+                                                [disabled]="!habilitarEdicionRfcColegio || !selectedFileConstancia || fileConstanciaUploadSuccess || loadingFileConstancia || !busquedaColegioRealizada">
+                                                @if (loadingFileConstancia) {
+                                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                    Adjuntando...
+                                                } @else {
+                                                    Adjuntar
+                                                }
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (selectedFileConstancia && !fileConstanciaUploadSuccess && !loadingFileConstancia) {
+                                <small class="text-muted d-block mt-1">Archivo seleccionado: {{ selectedFileConstancia.name }}</small>
+                            }
+
+                            <!-- Mensaje de éxito para constanciaMembresia -->
+                            @if (fileConstanciaUploadSuccess) {
+                                <div class="alert alert-success mt-2 d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    Constancia de membresía cargada exitosamente.
+                                    <div class="action-icons ms-3">
+                                        <a href="javascript:void(0)" (click)="downloadFile(fileConstanciaHdfsPath, selectedFileConstancia?.name || 'constancia_membresia')" class="icon-link" title="Descargar">
+                                            <i class="bi bi-download"></i>
+                                            <span class="icon-text"> </span>
+                                        </a>
+                                        <a href="javascript:void(0)" (click)="deleteFile('constanciaMembresia')" class="icon-link text-danger" title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                            <span class="icon-text"> </span>
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                            <!-- Mensaje de error específico para constanciaMembresia -->
+                            @if (fileConstanciaError) {
+                                <div class="alert alert-danger mt-2 d-flex align-items-center">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    {{ fileConstanciaError }}
+                                </div>
+                            }
+                            @if (formSubmitted && !fileConstanciaUploadSuccess) {
+                                <small class="text-danger">La constancia de membresía es obligatoria.</small>
+                            }
+                        </div>
+                    </div>
+
+            <div class="pull-right">
+                <div class="modal-footer">
+                    <div class="col-12 d-flex justify-content-end">
+                        <p class="me-3">* Campo obligatorio</p>
+                    </div>
+                    <!-- Botón Cancelar -->
+                    <button type="button" class="btn btn-secondary"   (click)="cancelarEdicionColegio()">Cancelar </button>
+                    <!-- Botón Siguiente -->
+                    <!-- Se deshabilita si:
+                         1. No está en modo edición (habilitarEdicionRfcColegio false)
+                         2. No hay nuevo RFC
+                         3. El RFC no es válido
+                         4. No se ha subido la constancia exitosamente
+                    -->
+                    <button type="button" class="btn btn-primary"  (click)="guardarDatosColegio()" [disabled]="!habilitarEdicionRfcColegio || !nuevoRfcColegio || !rfcColegioValido || !fileConstanciaUploadSuccess">Siguiente</button>
+                </div>
+            </div>
+
+
+                </div>
+            } @else if (selectedTipoDato === '3') {
+                <div class="alert alert-info my-3">
+                    No se encontraron datos de colegio asociados al RFC del contador.
+                </div>
+            }
+        </div>
+    </div>
+}
+
+
+
+
+
+<!-- SECCIÓN PARA MOSTRAR DATOS DEL DESPACHO (condicional) -->
+@if (mostrarSeccionDespacho) {
+    <div class="row mt-4">
+        <div class="col-12">
+            <h4>Datos del despacho</h4>
+            <hr class="red">
+
+            @if (loadingDespacho) {
+                <div class="text-center my-3">
+                    <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                    Cargando datos del despacho...
+                </div>
+            } @else if (despachoContador) {
+                <!-- SIEMPRE SE MUESTRA LA PREGUNTA DESPUÉS DE CARGAR LOS DATOS -->
+                <div class="mb-3">
+                    <p>¿Desea actualizar los datos de su despacho?</p>
+                    <button class="btn btn-primary me-2" (click)="respuestaActualizarDespacho(true)">Sí</button>
+                    <button class="btn btn-secondary" (click)="respuestaActualizarDespacho(false)">No</button>
+                </div>
+
+                <!-- CONTENIDO DEL DESPACHO: Etiquetas (si no está en modo edición) o Campos Editables (si habilitarCamposDespacho es true) -->
+                @if (deseaActualizarDespacho === true) {
+                    <!-- SECCIÓN DE EDICIÓN: CAMPOS HABILITADOS -->
+
+
+                    <div class="card p-3 mb-3">
+                        <div class="mb-3">
+                            <label for="tipoSociedad" class="form-label">* ¿Forma parte de un despacho o es profesional independiente?</label>
+                            <select id="tipoSociedad" class="form-control" style="max-width: 300px;"
+                                [(ngModel)]="selectedTipoSociedad"
+                                [disabled]="!habilitarCamposDespacho">
+                                <option value="">Seleccione</option>
+                                @for (tipo of tiposSociedad; track tipo.cveIdTipoSociedad) {
+                                    <option [value]="tipo.cveIdTipoSociedad">{{ tipo.desTipoSociedad }}</option>
+                                }
+                            </select>
+                            @if (formSubmitted && !selectedTipoSociedad) {
+                                <small class="text-danger">Este campo es obligatorio.</small>
+                            }
+                        </div>
+
+
+
+                        <!-- ===== OPCIÓN 1: PROFESIONAL INDEPENDIENTE (ID '2') ===== -->
+                        @if (selectedTipoSociedad === '2') {
+                            <div class="mb-3">
+                                <label for="tieneTrabajadores" class="form-label">* ¿Cuenta con trabajadores a su cargo?</label>
+                                <select id="tieneTrabajadores" class="form-control" style="max-width: 300px;"
+                                        [(ngModel)]="tieneTrabajadores"
+                                        [disabled]="!habilitarCamposDespacho">
+                                    <option value="">Elija Opción</option>
+                                    <option value="Si">Si</option>
+                                    <option value="No">No</option>
+                                </select>
+                                @if (formSubmitted && !tieneTrabajadores) {
+                                    <small class="text-danger">Debe indicar si tiene trabajadores.</small>
+                                }
+                            </div>
+
+                            @if (tieneTrabajadores === 'Si') {
+                                <div class="mb-3">
+                                    <label for="numeroTrabajadores" class="form-label">* Número de trabajadores:</label>
+                                    <input type="text" id="numeroTrabajadores" class="form-control" style="max-width: 200px;"
+                                        [(ngModel)]="numeroTrabajadores"
+                                        (keypress)="permitirSoloNumeros($event)"
+                                        [disabled]="!habilitarCamposDespacho"
+                                        placeholder="Ingrese cantidad"
+                                        maxlength="5">
+                                    @if (formSubmitted && (!numeroTrabajadores || numeroTrabajadores == '0')) {
+                                        <small class="text-danger">Debe ingresar un número de trabajadores válido.</small>
+                                    }
+                                </div>
+                            }
+                        }
+
+
+
+
+                        <!-- ===== OPCIÓN 2: DESPACHO (Cualquier otro ID, ej: '1') ===== -->
+                        @if (selectedTipoSociedad && selectedTipoSociedad !== '2') {
+
+                        <div class="mb-3">
+                            <label for="rfcDespacho" class="form-label">* RFC:</label>
+                            <input type="text" id="rfcDespacho" class="form-control" style="max-width: 300px;"
+                                [class.is-invalid]="formSubmitted && (!nuevoRfcDespacho || !validarRfcPersonaMoral(nuevoRfcDespacho))"
+                                [(ngModel)]="nuevoRfcDespacho"
+                                (ngModelChange)="busquedaDespachoRealizada = false; rfcDespachoValido = true;"
+                                [disabled]="!habilitarCamposDespacho || busquedaDespachoRealizada" 
+                                placeholder="Ingrese el RFC del despacho"
+                                maxlength="12">
+                            
+                            @if (formSubmitted && !validarRfcPersonaMoral(nuevoRfcDespacho)) {
+                                <div class="alert alert-danger mt-1 p-2 d-flex align-items-center" role="alert" style="max-width: 300px;">
+                                    <div>El RFC no cuenta con un formato válido, favor de verificar.</div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Nombre, denominación o razón social:</label>
+                            <!-- Muestra el nombre traído del servicio SAT -->
+                            <p><strong>{{ despachoContador.nombreRazonSocial || 'N/A' }}</strong></p>
+                        </div>
+
+                        <div>
+                            <!-- Botón BUSCAR: Invoca al servicio SAT -->
+                            <button type="button" class="btn btn-primary me-2"
+                                (click)="buscarDatosDespacho()"
+                                [disabled]="!habilitarCamposDespacho || !nuevoRfcDespacho || !rfcDespachoValido || busquedaDespachoRealizada">
+                                Buscar
+                            </button>
+
+                            <!-- Botón LIMPIAR: Desbloquea para nueva búsqueda -->
+                            <button type="button" class="btn btn-secondary"
+                                (click)="limpiarDatosDespacho()"
+                                [disabled]="!habilitarCamposDespacho">
+                                Limpiar
+                            </button>
+                        </div>
+
+                          <div class="mb-3">
+                              <label for="cargoDesempena" class="form-label">* Cargo que desempeña:</label>
+                              <select id="cargoDesempena" class="form-control" style="max-width: 300px;"
+                                  [(ngModel)]="selectedCargoDesempena"
+                                  [disabled]="!habilitarCamposDespacho">
+                                  <option value="">Seleccione</option>
+                                  @for (cargo of cargosContador; track cargo.cveIdCargoContador) {
+                                      <option [value]="cargo.cveIdCargoContador">{{ cargo.desCargoContador }}</option>
+                                  }
+                              </select>
+                              @if (formSubmitted && !selectedCargoDesempena) {
+                                  <small class="text-danger">Este campo es obligatorio.</small>
+                              }
+                          </div>
+
+
+                            <div class="mb-3">
+                                <label for="telefonoFijo" class="form-label">* Teléfono fijo:</label>
+                                <!-- 
+                                    CAMBIO 3: Validación de Teléfono 
+                                    - maxlength="12" (para cubrir 10 a 12)
+                                    - Mensaje de error específico
+                                -->
+                                <input type="text" id="telefonoFijo" class="form-control" style="max-width: 300px;"
+                                    [(ngModel)]="telefonoFijoDespacho"
+                                    (keypress)="permitirSoloNumeros($event)"
+                                    [disabled]="!habilitarCamposDespacho"
+                                    placeholder="Ej. 5512345678"
+                                    maxlength="12">
+                                
+                                <!-- Lógica de validación actualizada -->
+                                @if (formSubmitted) {
+                                    @if (!telefonoFijoDespacho) {
+                                        <small class="text-danger">El teléfono fijo es obligatorio.</small>
+                                    } @else if (!validarFormatoTelefono(telefonoFijoDespacho)) {
+                                        <!-- MENSAJE SOLICITADO EXACTO -->
+                                        <div class="alert alert-danger mt-1 p-2 d-flex align-items-center" role="alert" style="max-width: 300px;">
+                                                 
+                                                <div>El campo Teléfono debe de ser de 10 ó 12 dígitos.</div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        }
+
+                    </div>
+
+
+
+
+
+                    <!-- Botones Guardar y Cancelar para la sección de Despacho (en modo edición) -->
+                <div class="pull-right">
+                  <div class="modal-footer">
+                        <div class="col-12 d-flex justify-content-end">
+                          <p class="me-3">* Campo obligatorio</p>
+                        </div>
+                        <button type="button" class="btn btn-secondary" (click)="cancelarEdicionDespacho()" [disabled]="!habilitarCamposDespacho">Cancelar</button>
+                        <button type="button" class="btn btn-primary" 
+                                (click)="guardarDatosDespacho()" 
+                                [disabled]="!habilitarCamposDespacho || (selectedTipoSociedad !== '2' && !busquedaDespachoRealizada)">
+                                Siguiente
+                        </button>
+                  </div>
+                </div>
+
+
+                } @else {
+                    <!-- SECCIÓN DE SÓLO LECTURA: ETIQUETAS -->
+                    <div class="card p-3 mb-3">
+
+                        <!-- 1. CAMPO COMÚN: TIPO DE SOCIEDAD -->
+                        <div class="mb-3">
+                            <label class="form-label">¿Forma parte de un despacho o es profesional independiente?</label>
+                            <p><strong>{{ despachoContador.desTipoSociedad || 'N/A' }}</strong></p>
+                        </div>
+
+                        <!-- 2. SI ES INDEPENDIENTE (ID '2') -->
+                        @if (despachoContador.cveIdTipoSociedad === '2') {
+                            <div class="mb-3">
+                                <label class="form-label">¿Cuenta con trabajadores a su cargo?</label>
+
+                                <p><strong>{{ despachoContador.tieneTrabajadores || 'N/A' }}</strong></p>
+                            </div>
+
+                            @if (despachoContador.tieneTrabajadores === 'Si') {
+                                <div class="mb-3">
+                                    <label class="form-label">Número de trabajadores:</label>
+                                    <p><strong>{{ despachoContador.numeroTrabajadores || 'N/A' }}</strong></p>
+                                </div>
+                            }
+                        }
+
+                        <!-- 3. SI ES DESPACHO (Cualquier otro ID) -->
+                        @else {
+                            <div class="mb-3">
+                                <label class="form-label">RFC:</label>
+                                <p><strong>{{ despachoContador.rfcDespacho || 'N/A' }}</strong></p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Nombre, denominación o razón social:</label>
+                                <p><strong>{{ despachoContador.nombreRazonSocial || 'N/A' }}</strong></p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Cargo que desempeña:</label>
+                                <p><strong>{{ despachoContador.desCargoContador || 'N/A' }}</strong></p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Teléfono fijo:</label>
+                                <p><strong>{{ despachoContador.telefonoFijo || 'N/A' }}</strong></p>
+                            </div>
+                        }
+                    </div>
+                }
+            } @else if (despachoContador === null && !loadingDespacho && selectedTipoDato === '2') {
+                <!-- Mensaje si no se encontraron datos de despacho después de la carga inicial -->
+                <div class="alert alert-info my-3">
+                    No se encontraron datos de despacho asociados a su RFC. ¿Desea registrar uno nuevo?
+                    <div class="mt-2">
+                        <button class="btn btn-primary me-2" (click)="respuestaActualizarDespacho(true)">Sí</button>
+                        <button class="btn btn-secondary" (click)="respuestaActualizarDespacho(false)">No</button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+
+
+
+<!-- SECCIÓN PARA MOSTRAR DATOS PERSONALES (condicional) -->
+@if (mostrarSeccionPersonales) {
+
+<div class="container-fluid mt-3">
+
+  @if (loading) {
+    <div class="text-center">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Procesando...</span>
+      </div>
+      <p>Cargando datos del contador...</p>
+    </div>
+  } @else if (error) {
+    <div class="alert alert-danger" role="alert">
+      {{ error }}
+     <!-- <button type="button" class="btn btn-primary btn-sm ms-3" (click)="cargarDatosContador()">Reintentar</button>  -->
+    </div>
+  } @else if (datosContadorData) {
+
+    <!-- SECCIÓN DE DATOS PERSONALES -->
+
+        <div class="row">
+          <div class="col-12">
+            <h3 class="mb-0">Datos personales</h3>
+            <hr class="red">
+          </div>
+        </div>
+
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <label class="form-label-custom">RFC</label>
+            <p class="form-value-custom">{{ datosContadorData.datosPersonalesDto.rfc }}</p>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label-custom">CURP</label>
+            <p class="form-value-custom">{{ datosContadorData.datosPersonalesDto.curp }}</p>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <label class="form-label-custom">Apellido paterno</label>
+            <p class="form-value-custom">{{ datosContadorData.datosPersonalesDto.apellidoPaterno }}</p>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label-custom">Apellido materno</label>
+            <p class="form-value-custom">{{ datosContadorData.datosPersonalesDto.apellidoMaterno }}</p>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <label class="form-label-custom">Nombre(s)</label>
+            <p class="form-value-custom">{{ datosContadorData.datosPersonalesDto.nombre }}</p>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label-custom">Registro IMSS</label>
+            <p class="form-value-custom">{{ datosContadorData.datosPersonalesDto.registroIMSS }}</p>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <label class="form-label-custom">Estatus</label>
+            <p class="form-value-custom">{{ datosContadorData.datosPersonalesDto.estatus }}</p>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label-custom">Delegación</label>
+            <p class="form-value-custom">{{ datosContadorData.datosPersonalesDto.delegacion }}</p>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <label class="form-label-custom">Subdelegación</label>
+            <p class="form-value-custom">{{ datosContadorData.datosPersonalesDto.subdelegacion }}</p>
+          </div>
+        </div>
+
+
+    <!-- SECCIÓN DE DOMICILIO FISCAL -->
+
+
+        <div class="row">
+          <div class="col-12">
+            <h3 class="mb-0">Domicilio fiscal</h3>
+            <hr class="red">
+          </div>
+        </div>
+
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <label class="form-label-custom">Calle</label>
+            <p class="form-value-custom">{{ datosContadorData.domicilioFiscalDto.calle }}</p>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <label class="form-label-custom">Número exterior</label>
+            <p class="form-value-custom">{{ datosContadorData.domicilioFiscalDto.numeroExterior }}</p>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label-custom">Número interior</label>
+            <p class="form-value-custom">{{ datosContadorData.domicilioFiscalDto.numeroInterior }}</p>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <label class="form-label-custom">Entre la calle de</label>
+            <p class="form-value-custom">{{ datosContadorData.domicilioFiscalDto.entreCalle }}</p>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label-custom">Y la calle de</label>
+            <p class="form-value-custom">{{ datosContadorData.domicilioFiscalDto.yCalle }}</p>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <label class="form-label-custom">Colonia (asentamiento)</label>
+            <p class="form-value-custom">{{ datosContadorData.domicilioFiscalDto.colonia }}</p>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label-custom">Localidad</label>
+            <p class="form-value-custom">{{ datosContadorData.domicilioFiscalDto.localidad }}</p>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <label class="form-label-custom">Municipio o delegación</label>
+            <p class="form-value-custom">{{ datosContadorData.domicilioFiscalDto.municipioODelegacion }}</p>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label-custom">Entidad federativa</label>
+            <p class="form-value-custom">{{ datosContadorData.domicilioFiscalDto.entidadFederativa }}</p>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <label class="form-label-custom">Código postal</label>
+            <p class="form-value-custom">{{ datosContadorData.domicilioFiscalDto.codigoPostal }}</p>
+          </div>
+        </div>
+
+
+
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <label class="form-label-custom">Correo electrónico 1</label>
+            <p class="form-value-custom">{{ datosContadorData.datosContactoDto.correoElectronico1 }}</p>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label-custom">Teléfono</label>
+            <p class="form-value-custom">{{ datosContadorData.datosContactoDto.telefono1 }}</p>
+          </div>
+        </div>
+
+    <!-- SECCIÓN DE DATOS DE CONTACTO -->
+
+        <div class="row mt-4">
+
+            @if (loadingContacto) {
+              <div class="text-center my-3">
+                <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                Cargando datos de contacto...
+              </div>
+            } @else if (datosContadorData.datosContactoDto) {
+              <!-- PREGUNTA Y BOTONES PARA EDICIÓN -->
+              <div class="mb-3">
+                <p>¿Los datos son correctos?</p>
+                <button class="btn btn-primary me-2" (click)="respuestaActualizarContacto(true)">Sí</button>
+                <button class="btn btn-secondary" (click)="respuestaActualizarContacto(false)">No</button>
+              </div>
+
+              @if (deseaActualizarContacto === true) {
+
+                 <!-- SECCIÓN DE EDICIÓN: CAMPOS HABILITADOS -->
+                <div class="card p-3 mb-3">
+                    <div class="col-12">
+                      <h3 class="mb-0">Datos de contacto</h3>
+                      <hr class="red">
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- CORREO ELECTRÓNICO 2 -->
+                    <!-- ========================================== -->
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <label for="correoElectronico2" class="form-label">* Correo electrónico 2:</label>
+                            <input type="email" id="correoElectronico2" class="form-control"
+                                   [(ngModel)]="nuevoCorreoElectronico2"
+                                   placeholder="Ingrese correo electrónico 2"
+                                   [class.is-invalid]="formSubmitted && (!nuevoCorreoElectronico2 || !validarFormatoCorreo(nuevoCorreoElectronico2))">
+
+                            <!-- Validación: Requerido -->
+                            @if (formSubmitted && !nuevoCorreoElectronico2) {
+                                <small class="text-danger">El Correo electrónico 2 es obligatorio.</small>
+                            }
+                            <!-- Validación: Formato -->
+                            @else if (formSubmitted && nuevoCorreoElectronico2 && !validarFormatoCorreo(nuevoCorreoElectronico2)) {
+                                <small class="text-danger">El formato del correo no es válido (ej: usuario&#64;dominio.com).</small>
+                            }
+                        </div>
+
+                        <!-- CONFIRMACIÓN CORREO 2 -->
+                        <div class="col-sm-6">
+                            <label for="confirmarCorreoElectronico2" class="form-label">* Confirmar correo electrónico 2:</label>
+                            <input type="email" id="confirmarCorreoElectronico2" class="form-control"
+                                   [(ngModel)]="confirmarCorreoElectronico2"
+                                   placeholder="Confirme correo electrónico 2"
+                                   [class.is-invalid]="formSubmitted && (confirmarCorreoElectronico2 !== nuevoCorreoElectronico2 || !validarFormatoCorreo(confirmarCorreoElectronico2))">
+
+                            <!-- Validación: Formato Confirmación (Mensaje Imagen 1) -->
+                            @if (formSubmitted && confirmarCorreoElectronico2 && !validarFormatoCorreo(confirmarCorreoElectronico2)) {
+                                <div class="alert alert-danger mt-2 d-flex align-items-center" role="alert">
+                                    <i   style="font-size: 1.5rem;"></i>
+                                    <div>Favor de ingresar una dirección electrónica válida para el campo: Confirmar correo electrónico 2.</div>
+                                </div>
+                            }
+                            <!-- Validación: Coincidencia (Mensaje Imagen 2) -->
+                            @else if (formSubmitted && nuevoCorreoElectronico2 && confirmarCorreoElectronico2 && nuevoCorreoElectronico2 !== confirmarCorreoElectronico2) {
+                                <div class="alert alert-danger mt-2 d-flex align-items-center" role="alert">
+                                    <i  style="font-size: 1.5rem;"></i>
+                                    <div>Los datos capturados en el campo: Correo electrónico 2, no son iguales. Favor de capturar nuevamente.</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- CORREO ELECTRÓNICO 3 -->
+                    <!-- ========================================== -->
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <label for="correoElectronico3" class="form-label">* Correo electrónico 3:</label>
+                            <input type="email" id="correoElectronico3" class="form-control"
+                                   [(ngModel)]="nuevoCorreoElectronico3"
+                                   placeholder="Ingrese correo electrónico 3"
+                                   [class.is-invalid]="formSubmitted && (!nuevoCorreoElectronico3 || !validarFormatoCorreo(nuevoCorreoElectronico3))">
+
+                            <!-- Validación: Requerido -->
+                            @if (formSubmitted && !nuevoCorreoElectronico3) {
+                                <small class="text-danger">El Correo electrónico 3 es obligatorio.</small>
+                            }
+                            <!-- Validación: Formato -->
+                            @else if (formSubmitted && nuevoCorreoElectronico3 && !validarFormatoCorreo(nuevoCorreoElectronico3)) {
+                                <small class="text-danger">El formato del correo no es válido.</small>
+                            }
+                        </div>
+
+                        <!-- CONFIRMACIÓN CORREO 3 -->
+                        <div class="col-sm-6">
+                            <label for="confirmarCorreoElectronico3" class="form-label">* Confirmar correo electrónico 3:</label>
+                            <input type="email" id="confirmarCorreoElectronico3" class="form-control"
+                                   [(ngModel)]="confirmarCorreoElectronico3"
+                                   placeholder="Confirme correo electrónico 3"
+                                   [class.is-invalid]="formSubmitted && (confirmarCorreoElectronico3 !== nuevoCorreoElectronico3 || !validarFormatoCorreo(confirmarCorreoElectronico3))">
+
+                            <!-- Validación: Formato Confirmación -->
+                            @if (formSubmitted && confirmarCorreoElectronico3 && !validarFormatoCorreo(confirmarCorreoElectronico3)) {
+                                <div class="alert alert-danger mt-2 d-flex align-items-center" role="alert">
+                                    <i   style="font-size: 1.5rem;"></i>
+                                    <div>Favor de ingresar una dirección electrónica válida para el campo: Confirmar correo electrónico 3.</div>
+                                </div>
+                            }
+                            <!-- Validación: Coincidencia -->
+                            @else if (formSubmitted && nuevoCorreoElectronico3 && confirmarCorreoElectronico3 && nuevoCorreoElectronico3 !== confirmarCorreoElectronico3) {
+                                <div class="alert alert-danger mt-2 d-flex align-items-center" role="alert">
+                                    <i  style="font-size: 1.5rem;"></i>
+                                    <div>Los datos capturados en el campo: Correo electrónico 3, no son iguales. Favor de capturar nuevamente.</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- TELÉFONO 2 -->
+                    <!-- ========================================== -->
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <label for="telefono2" class="form-label">* Teléfono 2:</label>
+                            <!-- Input: Maxlength actualizado a 12 -->
+                            <input type="text" id="telefono2" class="form-control"
+                                   [(ngModel)]="nuevoTelefono2"
+                                   (keypress)="permitirSoloNumeros($event)"
+                                   placeholder="Ej. 5512345678"
+                                   maxlength="12"
+                                   [class.is-invalid]="formSubmitted && (!nuevoTelefono2 || !validarFormatoTelefono(nuevoTelefono2))">
+
+                            <!-- Validación: Requerido -->
+                            @if (formSubmitted && !nuevoTelefono2) {
+                                <small class="text-danger d-block">El Teléfono 2 es obligatorio.</small>
+                            }
+                            <!-- Validación: Longitud y formato (Mensaje Imagen 3) -->
+                            @else if (formSubmitted && !validarFormatoTelefono(nuevoTelefono2)) {
+                                <div class="alert alert-danger mt-2 d-flex align-items-center" role="alert">
+                                    <i   style="font-size: 1.2rem;"></i>
+                                    <div>El campo Teléfono debe de ser de 10 ó 12 dígitos.</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div> <!-- Fin del card -->
+
+                <div class="col-12">
+                    <h3 class="mb-0">Información profesional</h3>
+                    <hr class="red">
+                </div>
+
+                <div class="row mb-3">
+                  <div class="col-sm-6">
+                    <label class="form-label">Número de cédula profesional</label>
+                    <p><strong>{{ datosContadorData.datosContactoDto.cedulaprofesional || 'N/A' }}</strong></p>
+                  </div>
+                </div>
+
+                <!-- Botones Guardar y Cancelar para la sección de Contacto -->
+                <div class="pull-right">
+                  <div class="modal-footer">
+                        <div class="col-12 d-flex justify-content-end">
+                          <p class="me-3">* Campo obligatorio</p>
+                        </div>
+                        <button type="button" class="btn btn-secondary" (click)="cancelarEdicionContacto()">Cancelar</button>
+                        <button type="button" class="btn btn-primary" (click)="guardarDatosContacto()"  >Siguiente</button>
+                  </div>
+                </div>
+
+              }
+
+
+
+            } @else {
+              <div class="alert alert-info my-3">
+                No hay datos de contacto disponibles.
+              </div>
+            }
+
+        </div>
+
+
+
+  } @else {
+    <p class="text-center">No hay datos disponibles para mostrar.</p>
+  }
+</div>
+
+}

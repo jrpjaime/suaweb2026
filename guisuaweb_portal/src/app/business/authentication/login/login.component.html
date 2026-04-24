@@ -1,0 +1,43 @@
+<div class="container-fluid " style="margin-top: -65px !important;  margin-left: -20px !important;">
+  <div class="row">
+
+      <div class="col-md-6 d-none d-md-block ">
+          <!-- La imagen se establece como fondo a través de CSS -->
+              <img src="imagenlogin.jpeg" alt="SUAWEB" class="img-fluid image-cover">
+          <div class="overlay-text">
+             <h1 class="h2 fw-bold">SUAWEB</h1>
+             <p class="lead ">Sistema Único de Autodeterminación </p>
+          </div>
+      </div>
+
+    <!--  Formulario y Widget -->
+    <div class="col-md-6" style="overflow-y: auto;  margin-top: 50px; ">
+
+        <div class="tab-content">
+          <!-- Pestaña 2: Widget de Firma Digital (activa por defecto) -->
+          <div class="tab-pane active" [class.active]="activeTab === 'firma'">
+            <div class="single-feature align-items-center">
+              <!-- Formulario que envía datos al iframe para iniciar el widget -->
+              <form #formWidget id="formWidget" [action]="widgetUrl" method="post" target="formFirmaDigital"
+                style="display: none;">
+                <input id="params" name="params" type="hidden"
+                  value='{"operacion":"validarCertificado","salida":"rfc,cert,vigIni,vigFin,serie_cert,curp,rfc_rl,curp_rl,nombreRazonSocial"}'>
+              </form>
+
+              <!-- Iframe donde se renderiza el widget de firma -->
+              <div class="text-center">
+                <p><iframe id="formFirmaDigital" name="formFirmaDigital" width="850" height="370"
+                    style="border: none; max-width: 100%;"></iframe></p>
+              </div>
+            </div>
+          </div>
+        </div>
+         @if (errorMessage) {
+        <div class="alert alert-danger mt-3" role="alert">
+          {{ errorMessage }}
+        </div>
+        }
+
+    </div>
+  </div>
+</div>
